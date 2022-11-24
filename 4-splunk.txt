@@ -1,0 +1,117 @@
+hdu@um1:~$ splunk start
+ 
+SPLUNK GENERAL TERMS
+
+Last updated: February 13, 2020
+
+These Splunk General Terms ("General Terms") between 
+Splunk Inc., a Delaware corporation, with its principal place 
+of business at 270 Brannan Street, San Francisco, 
+California 94107, U.S.A ("Splunk" or "we" or "us" or "our") 
+and you ("Customer" or "you" or "your") apply to the 
+purchase of licenses and subscriptions for Splunk's 
+Offerings. By clicking on the appropriate button, or by 
+downloading, installing, accessing or using the Offerings, 
+you agree to these General Terms. If you are entering into 
+these General Terms on behalf of Customer, you represent 
+that you have the authority to bind Customer. If you do not 
+agree to these General Terms, or if you are not authorized 
+to accept the General Terms on behalf of the Customer, do 
+not download, install, access, or use any of the Offerings.
+
+See the General Terms Definitions Exhibit attached for 
+definitions of capitalized terms not defined herein. 
+
+1. License Rights
+
+(A) General Rights. You have the nonexclusive, worldwide, 
+    nontransferable and nonsublicensable right, subject to payment of 
+    applicable Fees and compliance with the terms of these General 
+    Terms, to use your Purchased Offerings for your Internal Business 
+    Purposes during the Term and up to the Capacity purchased. 
+
+(B) Copies for On-Premise Products. You have the right to make a 
+    reasonable number of copies of On-Premise Products for archival 
+    and back-up purposes.
+
+Do you agree with this license? [y/n]: y
+
+This appears to be your first time running this version of Splunk.
+
+Splunk software must create an administrator account during startup. Otherwise, you cannot log in.
+Create credentials for the administrator account.
+Characters do not appear on the screen when you type in credentials.
+
+Please enter an administrator username: aj1711singh
+Password must contain at least:
+   * 8 total printable ASCII character(s).
+Please enter a new password: 
+Please confirm new password: 
+Copying '/usr/local/splunk/etc/openldap/ldap.conf.default' to '/usr/local/splunk/etc/openldap/ldap.conf'.
+Generating RSA private key, 2048 bit long modulus
+...................................................................+++++
+.................................................................................................................................................................................................................................+++++
+e is 65537 (0x10001)
+writing RSA key
+
+Generating RSA private key, 2048 bit long modulus
+.............................................+++++
+..............+++++
+e is 65537 (0x10001)
+writing RSA key
+
+Moving '/usr/local/splunk/share/splunk/search_mrsparkle/modules.new' to '/usr/local/splunk/share/splunk/search_mrsparkle/modules'.
+
+Splunk> Winning the War on Error
+
+Checking prerequisites...
+	Checking http port [8000]: open
+	Checking mgmt port [8089]: open
+	Checking appserver port [127.0.0.1:8065]: open
+	Checking kvstore port [8191]: open
+	Checking configuration... Done.
+		Creating: /usr/local/splunk/var/lib/splunk
+		Creating: /usr/local/splunk/var/run/splunk
+		Creating: /usr/local/splunk/var/run/splunk/appserver/i18n
+		Creating: /usr/local/splunk/var/run/splunk/appserver/modules/static/css
+		Creating: /usr/local/splunk/var/run/splunk/upload
+		Creating: /usr/local/splunk/var/run/splunk/search_telemetry
+		Creating: /usr/local/splunk/var/spool/splunk
+		Creating: /usr/local/splunk/var/spool/dirmoncache
+		Creating: /usr/local/splunk/var/lib/splunk/authDb
+		Creating: /usr/local/splunk/var/lib/splunk/hashDb
+New certs have been generated in '/usr/local/splunk/etc/auth'.
+	Checking critical directories...	Done
+	Checking indexes...
+		Validated: _audit _internal _introspection _metrics _metrics_rollup _telemetry _thefishbucket history main summary
+	Done
+	Checking filesystem compatibility...  Done
+	Checking conf files for problems...
+	Done
+	Checking default conf files for edits...
+	Validating installed files against hashes from '/usr/local/splunk/splunk-8.0.4.1-ab7a85abaa98-linux-2.6-x86_64-manifest'
+	All installed files intact.
+	Done
+All preliminary checks passed.
+
+Starting splunk server daemon (splunkd)...  
+Generating a RSA private key
+.............................................................................................................+++++
+...+++++
+writing new private key to 'privKeySecure.pem'
+-----
+Signature ok
+subject=/CN=um1/O=SplunkUser
+Getting CA Private Key
+writing RSA key
+Done
+
+
+Waiting for web server at http://127.0.0.1:8000 to be available...... Done
+
+
+If you get stuck, we're here to help.  
+Look for answers here: http://docs.splunk.com
+
+The Splunk web interface is at http://n1:8000
+

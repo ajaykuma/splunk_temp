@@ -1,0 +1,27 @@
+Provisioning a Splunk Cloud Instance
+-------------------------
+https://www.splunk.com/ 
+> free splunk 
+> create an account 
+> choose cloud trial 
+> verify your email address
+> Login into your account
+
+wait for few minutes to receive details of your free cloud trial account
+
+Optionally :
+visit: splunk.com
+Login into your account
+Click on your name on top right corner and select instances..
+
+Active
+
+PRODUCT			SIZES	START DATE	EXPIRATION DATE	 INSTANCE NAME		
+Splunk>cloud trial	5GB	Jul 07, 2020	Jul 22, 2020	myinstance edit		
+
+Access Instance..
+
+
+
+
+

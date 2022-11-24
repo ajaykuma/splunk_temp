@@ -1,0 +1,59 @@
+Provisioning Splunk on Ubuntu (single standalone server)
+---------------------------
+Setup a ubuntu 18.04 (in vmbox)
+Setup Java
+Visit splunk.com and login into your account
+>Free splunk
+>Splunk enterprise > Download free 60 day trial > linux > download .tgz
+>or download .deb
+
+#Assuming username:hdu and hostname is n1
+
+if downloaded .tgz
+$sudo su
+$cd /usr/local
+$tar -xvf /home/hdu/Downloads/splunk-8.0.4.1-ab7a85abaa98-Linux-x86_64.tgz
+$chown -R hdu:hdu splunk*
+$cd
+
+#to update path of splunk in .bashrc for your username:hdu
+$su hdu
+$vi .bashrc
+export SPLUNK_HOME=/usr/local/splunk
+export PATH=$PATH:$SPLUNK_HOME/bin
+$source .bashrc
+
+$splunk start
+>accept license
+>provide username for administrator
+>provide password
+
+After Splunk web interface is ready
+http://n1:8000 > login
+
+if downloaded .deb
+$cd /home/hdu/Downloads
+$sudo dpkg -i ./splunk----.deb
+$ls /opt
+$sudo /opt/splunk/bin/splunk start
+>accept license
+>provide username for administrator
+>provide password
+
+Access the web interface
+
+Note** To enable SSL
+web interface > settings > server settings > Enable SSL > save
+messages > restart splunk > open web interface > advanced > access risk and continue > login.
+
+=======================
+Setup Universal forwarder Linux
+----------------------------
+https://docs.splunk.com/Documentation/Forwarder/8.0.4/Forwarder/Installanixuniversalforwarder#Install_the_universal_forwarder_on_Linux
+
+https://www.splunk.com/en_us/download/universal-forwarder.html
+
+follow steps as mentioned above for : 'if downloaded .tgz'
+=================
+
+
