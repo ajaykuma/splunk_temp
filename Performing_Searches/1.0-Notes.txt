@@ -1,0 +1,144 @@
+Search & Reporting app is often referred to as Splunk Search
+Splunk Search Processing Language (SPL) encompasses all the search commands and their functions, arguments and clauses.
+
+Raw event searches:
+are searches that just retrieve events from an index or indexes, and are typically used when you want to analyze a problem. 
+Some examples of these searches include: checking error codes, correlating events, investigating security issues, and 
+analyzing failures. These searches do not usually include search commands (except search, itself), and the results are 
+typically a list of raw events.
+Events are retrieved from the indexes in reverse time order. The results of a search are ordered from most recent 
+to least recent by default. You can retrieve events faster if you filter by time, whether you are using the timeline 
+to zoom in on clusters of events or applying time ranges to the search itself.
+
+Using fields to retrieve events:
+Fields are searchable name/value pairings in event data.
+ex:host=webserver
+As Splunk software processes event data, it extracts and defines fields from that data, first at index time, 
+and again at search time.
+
+At index time, Splunk software extracts a small set of fields. This set of fields includes 
+default fields, 
+custom indexed fields, 
+and fields indexed from structured data.
+
+Default fields exist in all events. Three important default fields are host, source, and source type.
+Splunk software also automatically adds default fields classified as internal fields.
+
+At search time, Splunk software extracts additional fields, depending on its Search Mode setting and 
+whether or not that setting enables field discovery given the type of search being run.
+ex:
+host=corp* eventtype=access user=strx
+source="/var/www/log/php_error.log"
+sourcetype="access_*"
+host=corp1 linecount>4 NOT 400
+[Search corp1 for events that have more than 4 lines, and omit events that contain the term 400.]
+NOT field="value"
+[returns events where field is undefined (or NULL)]
+field!="value"
+[ where field exists and does not have the value "value"]
+
+Transforming searches are searches that perform some type of statistical calculation against a set of results. 
+These are searches where you first retrieve events from an index and then pass the events into one or more search commands.
+ These searches will always require fields and at least one of a set of statistical commands.
+
+The primary transforming commands are:
+
+chart: creates charts that can display any series of data that you want to plot. You can decide what field is tracked on the x-axis of the chart.
+timechart: used to create "trend over time" reports, which means that _time is always the x-axis.
+top: generates charts that display the most common values of a field.
+rare: creates charts that display the least common values of a field.
+stats: generates a report that display summary statistics.
+
+The chart, timechart, and stats commands are all designed to work with statistical functions. The list of available statistical functions includes:
+
+count, distinct count
+mean, median, mode
+min, max, range, percentiles
+standard deviation, variance
+sum
+first occurrence, last occurrence
+
+ex:
+index="hadooplogs" | stats count by source
+index="hadooplogs" | stats distinct_count by source
+
+Information Density:
+Sparse searches are searches that look for a single event or an event that occurs infrequently within a large set of data. 
+You have probably heard these referred to as 'needle in a haystack' or "rare term" searches. Some examples of these searches
+ include: searching for a specific and unique IP address or error code.
+
+Dense searches are searches that scan through and report on many events. Some examples of these searches include: 
+counting the number of errors that occurred or finding all events from a specific host.
+
+Streaming, generating, transforming, orchestrating, and data processing are used to describe the types of search commands. 
+
+There are six broad categorizations for almost all of the search commands:
+
+distributable streaming
+centralized streaming
+transforming
+generating
+orchestrating
+dataset processing
+
+A streaming command operates on each event as it is returned by a search. Essentially one event in and one (or no) event out.
+example, the eval command can create a new field, full_name, to contain the concatenation of the value in the 
+first_name field, a space, and the value in the last_name field.
+
+A non-streaming command requires the events from all of the indexers before the command 
+can operate on the entire set of events. Many transforming commands are non-streaming commands.
+ There are also several commands that are not transforming commands but are also non-streaming. 
+These non-transforming, non-streaming commands are most often dataset processing commands.
+
+For example, before the sort command can begin to sort the events, the entire set of events must be received 
+by the sort command. Other examples of non-streaming commands include dedup (in some modes), stats, and top.
+
+When a command is run it outputs either events or results, based on the type of command. 
+For example, when you run the sort command, the input is events and the output is events 
+in the sort order you specify. However, transforming commands do not output events.
+ Transforming commands output results. For example the stats command outputs a table of calculated results. 
+
+A streaming command operates on each event returned by a search. For distributable streaming, 
+the order of the events does not matter. A distributable streaming command is a command that can be run on 
+the indexer, which improves processing time.
+Some of the common distributable streaming commands are: eval, fields, makemv, rename, regex, replace, strcat,
+ typer, and where.
+
+For centralized streaming commands, the order of the events matters. A centralized streaming command applies a
+ transformation to each event returned by a search. 
+ex: Centralized streaming commands include: head, streamstats, some modes of dedup, and some modes of cluster.
+
+A transforming command orders the search results into a data table. These commands "transform" the specified cell 
+values for each event into numerical values 
+that Splunk software can use for statistical purposes. Transforming commands are not streaming. Also, transforming 
+commands are required to transform search result data into the data structures that are required for visualizations 
+such as column, bar, line, area, and pie charts.
+Transforming commands include: chart, timechart, stats, top, rare, and addtotals when it is used to calculate column 
+totals (not row totals).
+
+A generating command fetches information from the indexes, without any transformations. 
+Generating commands are either event-generating (distributable or centralized) or report-generating. 
+Most report-generating commands are also centralized.
+Examples of generating commands include: dbinspect, datamodel, inputcsv, metadata, pivot, search, and tstats
+
+
+An orchestrating command is a command that controls some aspect of how the search is processed. It does not directly 
+affect the final result set of the search. For example, you might apply an orchestrating command to a search to enable 
+or disable a search optimization that helps the overall search complete faster.
+Examples of orchestrating commands include redistribute, noop, and localop. The lookup command also becomes an 
+orchestrating command when you use it with the local=t argument.
+
+There are a handful of commands that require the entire dataset before the command can run. These commands 
+are referred to as dataset processing commands. These commands are not transforming, not distributable, not streaming, 
+and not orchestrating. Some of these commands fit into other types in specific situations or when specific arguments are used.
+
+Examples of data processing commands include: sort, eventstats, and some modes of cluster, dedup, and fillnull.
+
+
+
+
+
+
+
+
+

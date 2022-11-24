@@ -1,0 +1,35 @@
+Search > host="HP" index="hadooplogs" sourcetype="LogFile"  (all time)
+Look for selected and inserting fields.
+
+We would want to search events with specific type of msgs..
+
+Click on +Extract new fields
+Select Sample event > Select a line which contains type of msg
+
+for example : 2019-09-22 17:14:18,425 INFO org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor: Adding new storage ID DS-01009e13-0eb1-474c-93d0-ef549d5f1ed8 for DN 192.168.0.19:50010
+
+Click on next > Regular expression > highlight the portion and Give a 'Field Name' and look at Sample Value > Add extraction
+Preview >
+Validate >
+
+for example:
+highlighted :> org.apache.hadoop.hdfs.
+name: typeofmsg
+
+Save: Extractions Name : EXTRACT-typeofmsg
+Permissions: All apps
+Source type - hadooplog
+Sample event - 2019-09-22 17:14:18,359 INFO org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor: 
+               Number of failed storage changes from 0 to 0
+Fields typeofmsg
+Regular Expression
+^(?:[^ \n]* ){3}(?P<typeofmsg>\w+\.\w+\.\w+\.\w+\.)
+
+Success
+>explore the fields I just created in search
+
+Queries in Search Bar
+index=_* OR index=* sourcetype=hadooplog
+sourcetype=hadooplog host=hadooplogNN typeofmsg="*" "2019-09-*"
+
+etc..

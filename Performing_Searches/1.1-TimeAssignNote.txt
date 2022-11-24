@@ -1,0 +1,57 @@
+Searching using time
+-------------------
+
+Timestamp processing is used in event processing.
+
+Splunk uses timestamps:
+-Correlate events by time
+-Create the timeline histogram in Splunk Web
+-Set time ranges for searches
+
+Splunk software adds timestamps to events at index time. 
+Timestamp values are assigned automatically by using information that the software finds in the raw event data. 
+
+How Timestamp assignment works (internally)
+[ If there is no explicit timestamp in an event, Splunk software attempts to assign a timestamp value 
+through other means. To recognize the timestamps,configure timestamp extraction.
+Splunk software stores timestamp values in the _time field using Coordinated Universal Time (UTC) format.
+
+How time assignment is done:
+1.The software looks for a time or date in the event itself using an explicit TIME_FORMAT, 
+if provided. You configure the TIME_FORMAT attribute in the props.conf file.
+
+2.If no TIME_FORMAT is configured for the data, Splunk software attempts to automatically identify a time or date in the event itself. 
+It uses the source type of the event, which includes TIME_FORMAT information, to try to find the timestamp.
+
+3.If an event has a time and date, but not a year, Splunk software determines the year and builds the timestamp from that date.
+
+4.If no events in the source have a date, Splunk software tries to find a date in the source name or file name. The events must have a time, even if they don't have a date.
+
+5.For file sources, if no date can be identified in the file name, Splunk software uses the file modification time.
+
+6.The software attempts to automatically identify a time or date in the event itself using the advanced timestamp recognition configured in datetime.xml.
+
+7.As a last resort, Splunk software sets the timestamp to the current system time when indexing each event.
+
+------------
+How splunk finds timestamps with no year
+If Splunk software discovers a timestamp within an event that does not have a year element, it uses the following logic to determine the year:
+
+It identifies the current date by using either the date of the event it last parsed or the current clock time.
+It then uses the year from that date as a base and runs the year through several tests:
+If the date in the new event is December 31 and the current date is January 1, it decrements the base year.
+If the date in the new event is January 1 and the current date is December 31, it increments the base year.
+If the date in the new event is February 29, it determines if the current year is a leap year.
+If the current year is a leap year, it uses that year as the base year. If it is not, it uses the previous leap year.
+If none of the previous tests results in a successful base year determination, the software uses the following procedure to determine the year:
+It determines the day of the year of the new event by calculating the number of days from January 1.
+If the date information of the previous event is available, and the day of the year of that event is greater than the day of the year of the new event plus 4 days, then it increments the base year.
+If the date information of the previous event is not available, and the day of the year of the new event is greater than the current day of the year plus 2 days, then it decrements the base year.
+The software then assigns the base year to the timestamp for the event. The timestamp must still pass the time range check for the timestamp to be valid.
+
+
+
+                           ]
+
+
+

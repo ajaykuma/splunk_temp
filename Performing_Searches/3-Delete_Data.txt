@@ -1,0 +1,39 @@
+Delete index: 
+
+settings > indexes > select & delete index 
+
+OR
+
+Delete Data
+
+Removing data from Splunk is possible by using the delete command. 
+We first create the search condition to fetch the events we want to mark for delete. 
+Once the search condition is acceptable, we add the delete clause at the end of the command to remove those events
+from Splunk. After deletion, not even a user with admin privilege is able to view this data in Splunk.
+
+Removal of data is irreversible. If you still want the removed data back into Splunk then you 
+should have the original source data copy with you which can be used to re-index the data in Splunk. 
+It will be a process similar to creating a new index.
+
+Assigning Delete Privilege
+Any user including admin user does not have access to delete the data by default. 
+By default, only the "can_delete" role has the ability to delete events. 
+So, we create a new user, assign this role and then login with the credentials of this 
+new user to perform the delete operation.
+
+New user created : settings > users > new user 
+                   name:todeluser
+                   can_delete 
+
+Then login as new user.
+for example from our past queries :
+
+in search bar > source="syslog" host="ApplSysLog" index="application_log" sourcetype="syslog" | delete
+              > index=* host=HP_Appl_Log | delete
+
+Login back as admin and check if data exists
+
+======================
+
+
+

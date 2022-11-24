@@ -1,0 +1,264 @@
+Splunk software sometimes represents time in UNIX time. 
+Time represented this way appears as a series of numbers, for example 1518632124. 
+--We can use any UNIX time converter to convert the UNIX time to either GMT or your local time.
+--We can use 'convert ctime()' or 'strptime()' or 'strftime()'
+
+[Note**UNIX time and epoch time are often used synonymously, HOWEVER
+the epoch represents UNIX time 0 (midnight at the start of 1 January 1970). 
+The epoch traditionally corresponds to 0 hours, 0 minutes, and 0 seconds (00:00:00) 
+Coordinated Universal Time (UTC) on a specific date, which varies from system to system.
+
+UNIX time, or the UNIX timestamp, refers to the number of seconds that have elapsed since the epoch i.e.
+is a date-time format used to express the number of milliseconds that have elapsed since January 1, 1970 00:00:00 (UTC)]
+
+Using convert:
+This command converts the field values to numerical values.
+If you don’t specify AS clause with then old value will be overwritten by new values.
+
+| metadata type=sourcetypes index=botsv1 | convert ctime(firstTime) as NewFirstTime
+
+VS
+
+| metadata type=sourcetypes index=botsv1 | convert ctime(firstTime) 
+
+Arguements with 'convert'
+timeformat – Specify output format of time fields. The time format option is used for ctime and mktime functions.
+ By default value is  “%m/%d/%Y %H:%M:%S”.
+
+mktime – Convert  human readable time format epoch time format. You can specify the time format by timeformat argument.
+ This is an alternative option of strptime() function in eval functions.
+ex: | metadata type=sourcetypes index=botsv1 | convert ctime(firstTime) as NewFirstTime | convert mktime(NewFirstTime)
+
+ctime – Convert an epoch time format to human readable time format. You can specify the time format by timeformat 
+argument. This is an alternative option of strftime() function in eval functions.
+
+query:>| metadata type=sourcetypes index=botsv1
+
+shows:
+Shows results
+firstTime	lastTime	recentTime	sourcetype	totalCount	type
+1470009975	1472428471	1473366069	wineventlog	5173	        sourcetypes
+1470009600	1472428740	1473366071	wineventlog	14218920	sourcetypes
+
+Working with datetime
+#converting time in human readable
+
+ex: q:| metadata type=sourcetypes index=botsv1 | convert ctime(firstTime) as NewFirstTime 
+    q:| metadata type=sourcetypes index=botsv1 | convert timeformat="%d/%b/%Y" ctime(firstTime) as NewFirstTime
+    q:| metadata type=sourcetypes index=botsv1 | convert ctime(firstTime) as firstTime | convert ctime(lastTime) as lastTime
+    	| convert ctime(recentTime) as recentTime
+
+ex:
+index=_internal sourcetype=splunkd_ui_access
+| stats latest(_time) as LT, earliest(_time) as LTE 
+| convert ctime(LT) as "ConvertedEpochTimeLT" ctime(LTE) as "ConvertedEpochTimeLTE"
+
+Note**
+In the above query _time is an internal field name of  _internal index name and sourcetype name is splunkd_ui_access .
+Also _time represents the event time in Splunk. By latest function with stats command we have taken latest event time 
+and store the value in LT field. 
+Next we have converted epoch time to human readable time format  by ctime function with convert 
+command and store the value in a new field called “ConvertedEpochTimeLT”. 
+
+ex:
+index=_internal sourcetype=splunkd_ui_access
+| stats latest(_time) as LT 
+| convert timeformat="%c" ctime(LT) as "ConvertedEpochTime"
+
+Note**
+We have used “%c” with timeformat argument to format the time field as current locale’s time format 
+defined by systems operating system.
+
+ex:
+index=_internal sourcetype=splunkd_ui_access
+| stats latest(_time) as LT
+| convert timeformat="%m/%d/%Y %H:%M" mktime(LT)
+| eval A=LT-1200
+| convert timeformat="%m/%d/%Y %H:%M" ctime(A) as "20_min_before"
+| convert timeformat="%m/%d/%Y %H:%M" ctime(LT) as Time
+| fields Time,20_min_before
+
+Note**
+we have converted human readable time format to epoch time by mktime function with convert command. 
+Also we have taken upto minute value by timeformat argument as we have given “%m/%d/%Y %H:%M”. 
+By default it takes “%m/%d/%Y %H:%M:%S” . By the eval command we have taken 20 mins earlier epoch time from LT .
+ As we know that epoch time is represented in second . So for getting 20 mins earlier 
+time we have subtracted 1200 second(20*60) from LT and store the value in A field . 
+So now LT and A fields are in epoch time . Again we have converted epoch time format to human readable 
+format by ctime function and store the values in new fields called “20_mins_before” and “Time”. 
+At last by the fields command we have taken only “Time” and  “20_mins_before” fields.
+
+strptime() and strftime() are used with eval:
+1. strptime() :
+                It is an eval function which is used to 
+                parse a timestamps value
+ 
+ 
+2. strftime() :
+                It is an eval function which is used to 
+                format a timestamps value
+
+Note**
+We have to make a two stage operations, first convert our input format to “epoch”
+ and then convert it to our desired format.
+
+#Using eval with strftime
+query:
+index="botsv1" sourcetype="stream:tcp" | eval time=strftime(_time, "%B:%Y") | table time,app,src_ip,dest_ip
+
+in above query eval could be:
+| eval time=strftime(_time, "%Y") ---year
+| eval time=strftime(_time, "%H:%M") ---hour,minute
+| eval time=strftime(_time, "%H:%M:%S") ---hour,minute,seconds
+| eval time=strftime(_time, "%A:%d:%H:%M:%S") 
+
+For example:
+q5:index="botsv1" sourcetype="stream:tcp" | eval time=strftime(_time, "%B:%Y:%H:%M") | table time,app,src_ip,dest_ip
+
+-------------------
+
+When you start a new search, the default time range is Last 24 hours.
+Whether you are running a new search, a report, or creating a dashboard, it is important to narrow the time range to 
+only the dates or times that you really need.
+
+Use the time range picker to set time boundaries on your searches. 
+You can restrict a search with preset time ranges, create custom time ranges, 
+specify time ranges based on date or date and time, 
+or work with advanced features in the time range picker.
+
+The time range picker includes many built-in time ranges options that are already defined in the times.conf file
+>index=_internal sourcetype=splunkd
+
+from time range picker, choose 'last 15 minutes'
+
+index=_internal sourcetype=splunkd
+
+--sorting the data 
+index=_internal sourcetype=splunkd | sort _time desc
+
+from time range picker, under 'relative' section we can choose some options such as
+Today, Week to date, Business week to date, month to date, Year to date
+Other options such as Yesterday, Previous week, Previous business week,Previous month, Previous year depends on dates of 
+events existing in index.
+
+--choose 'Today'
+index=_internal sourcetype=splunkd | stats min(_time),max(_time) 
+
+--using conversion to readable format
+index=_internal sourcetype=splunkd | stats min(_time) as min,max(_time) as max | convert ctime(min) as StartTime ctime(max) as EndTime
+
+--Custom Relative time ranges:
+--We can click on relative and specify custom time range
+Earliest: 20 seconds ago
+Latest: Now 
+
+index=_internal sourcetype=splunkd
+
+--choosing real time (say 5 secs window)
+index = _internal sourcetype=splunk_search_messages
+
+--open a different tab and run a search to see your search appearing in previous real time query
+
+--Select data range or data & time range for a particular index
+index = hadooplogs | sort desc
+Before '3/3/2020' (we can also choose between and since)
+
+--Using advanced time range options
+We can write the times in UNIX time or relative time notation, such as -3d@d. 
+The UNIX time value you type is converted to local time.
+-916d@d to -876d@d
+
+--create a new preset time range
+From the Settings menu, under the Knowledge list select User interface.
+In the User Interface window, select Time ranges.
+Click New.
+Complete the fields in the Add New window and click Save.
+
+Name:CustomTime
+Earliest Time: -1d@d+10h
+Latest Time: -1d@d+23h
+
+--Hiding existing
+From the Settings menu, under the Knowledge list select User interface.
+In the User Interface window, select Time ranges.
+Locate the time range you want to hide. In the Status column click Disable.
+
+==============
+An absolute time range uses specific dates and times, for example, from 12 A.M. April 1, 2022 to 12 A.M. April 13, 2022.
+
+A relative time range is dependent on when the search is run. For example, a relative time range of -60m means 60 
+minutes ago. If the current time is 3 P.M., the search returns events from the last 60 minutes, or 2 P.M. to 3 P.M. today.
+
+The current time is referred to as "now".
+
+--specifying in search
+--Begin your string with a minus ( - ) or a plus ( + ) to indicate the offset before or after the time amount.
+--s,m,h,d,w,mon,q,y
+
+--With relative time, you can specify a snap to time, which is an offset from the relative time. 
+--The snap to time unit rounds down to the nearest or latest time for the time amount that you specify. 
+[+|-]<time_integer><time_unit>@<time_unit>
+
+--Splunk software always snaps backwards or rounds down to the latest time that is not after the specified time. 
+For example, the current time is 15:45:00 and the snap to time is earliest=-h@h. The time modifier snaps to 14:00.
+
+-- For example, to snap to a specific day of the week, use @w0 for Sunday, @w1 for Monday etc..
+--if you want to search for events in the previous month, specify earliest=-mon@mon latest=@mon. This example begins
+ at the start of the previous month and ends at the start of the current month.
+
+earliest=-2d, the search goes back exactly two days
+earliest=-2d@d, the search goes back to two days and snaps to the beginning of the day. 
+
+>index="hadooplogs" latest=-876d@d
+>index = _internal earliest=-5s
+
+------------
+Time ranges selected from the Time Range Picker apply to the main search and to subsearches, 
+unless a time range is specified in the Search bar.
+
+Time ranges that you specify directly in the Search bar apply only to that portion of the search.
+
+The time ranges specified in the main search do not apply to subsearches.
+Time time ranges specified in a subsearch applies only to that subsearch. The time range does not 
+apply to the main search or any other subsearch.
+
+
+----Options
+earliest=1 to search events from the start of UNIX epoch time
+earliest=0 time is not used in the search
+latest=now Specify that the search starts or ends at the current time
+@q, @qtr, or @quarter a snap to the beginning of the most recent quarter:
+w0, w1, w2, w3, w4, w5, w6, and w7 snap to" days of the week; where w0 is Sunday, w1 is Monday etc..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,160 @@
+Performing Searches
+------------------
+#Set1
+Settings > Add data > upload
+--upload log files-- (add 3 log files from Datasets_For_Work\hadooprelatedlogs\Hadoop)
+   --source type : default > save as > LogFile
+   --create new index: hadooplogs
+
+Search Data
+Start searching
+
+q1:
+source="hadoop-hdu-secondarynamenode-um2.log" host="HP" index="hadooplogs" sourcetype="LogFile"
+[Notice source is 1 now]
+
+q2:
+host="HP" index="hadooplogs" sourcetype="LogFile"
+[shows 3 sources]
+[click on sources to see all the sources from where data has come, data count and % contribution to overall dataset]
+
+q3:
+[from 'under interesting fields' > xx more fields > say select 'MB' > close]
+[from 'selected fields' > click on MB > 'events with this field' & query changes to]
+host="HP" index="hadooplogs" sourcetype="LogFile" MB="*" [select All time]
+[note number of events listed]
+
+q4:[Based on previous query result]
+Under 'Event' highlight '0.25%' by placing your cursor and then 'add to search' and see if query is updated..
+host="HP" index="hadooplogs" sourcetype="LogFile" MB="*" "0.25"
+[note the number of events listed]
+
+q5:> from search history select host="HP" index="hadooplogs" sourcetype="LogFile"
+     add to search
+     >  host="HP" index="hadooplogs" sourcetype="LogFile"
+     [click on 'data_month' field and view the values > click on > 'events with this field']
+     > host="HP" index="hadooplogs" sourcetype="LogFile" date_month="*"
+     [specify a particular month]
+     > host="HP" index="hadooplogs" sourcetype="LogFile" date_month="august"
+     [to show the data_month field, add it to selected fields, by clicking on field from 'interesting fields' and 
+      selecting 'YES' next to selected]
+     [Now events should show the field in results]
+
+q6:> host="HP" index="hadooplogs" sourcetype="LogFile" date_month="*"
+
+q7:>host="HP" index="hadooplogs" sourcetype="LogFile" date_month="*" | stats
+   >host="HP" index="hadooplogs" sourcetype="LogFile" date_month="august" | stats
+   >host="HP" index="hadooplogs" sourcetype="LogFile" date_month="*" | stats count by date_month
+   >host="HP" index="hadooplogs" sourcetype="LogFile" earliest=0
+   >host="HP" index="hadooplogs" sourcetype="LogFile" earliest=0 | sort _time asc
+   >host="HP" index="hadooplogs" sourcetype="LogFile" earliest=0 | sort _time desc
+   >host="HP" index="hadooplogs" sourcetype="LogFile" | table source,date_month
+   >host="HP" index="hadooplogs" sourcetype="LogFile" | table source,date_month | stats count by source
+   >host="HP" index="hadooplogs" sourcetype="LogFile" | table source,date_month | stats count by source,date_month
+   >host="HP" index="hadooplogs" sourcetype="LogFile" | stats dc(date_month) count
+
+q8:>host="HP" index="hadooplogs" sourcetype="LogFile"
+   #create a new field 'TypeofMsg'  by refering to 'Searching_Data_own_fields.txt'
+   >index="hadooplogs" TypeOfMsg="*" | stats count by TypeOfMsg
+   >index="hadooplogs" | stats count(TypeOfMsg) by source,TypeOfMsg
+
+q9:>index="hadooplogs" storageInfo="*" | table txid storageInfo
+   >index="hadooplogs" | stats count(TypeOfMsg) by source _time | table _time source count(TypeOfMsg) | sort _time desc
+
+#provided TypeOfMsg(for org.apache.hadoop.. pattern) and CatOfMsg (WARN/INFO/ERROR/FATAL) fields were extracted
+q10:>index="hadooplogs" | table _time TypeOfMsg CatOfMsg | rename _time as Time TypeOfMsg as ClassResp CatOfMsg as Type
+q11:>index="hadooplogs" CatOfMsg="*" TypeOfMsg="*" | stats count by CatOfMsg,TypeOfMsg | sort count desc
+
+q12:>index=hadooplogs CatOfMsg="*"
+| eventstats min(_time) as mintime max(_time) as maxtime by source
+| eval Duration = maxtime - mintime
+| table source,_time,CatOfMsg,TypeOfMsg,Duration
+
+q13:>index=hadooplogs CatOfMsg="FATAL"
+| eventstats min(_time) as mintime max(_time) as maxtime by source
+| eval Duration = maxtime - mintime
+| table source,_time,CatOfMsg,TypeOfMsg,Duration
+
+q14:>
+or using
+transaction command
+index=hadooplogs | search TypeOfMsg="FATAL" OR "WARN" 
+| transaction TypeOfMsg | table TypeOfMsg,_time,duration
+
+====================================
+#Set2
+Splunk Web ui > settings > add data > upload > Datasets_For_Work\hadooprelatedlogs\application\syslog
+SetSourceType: syslog
+Timestamp : Extraction <auto> (if changes then save your source type by same name or by giving a new name)
+InputSettings: Host field value : ApplSysLog
+Index : application_log
+
+Review> Review 
+Input Type ....Uploaded File 
+File Name ...syslog
+Source Type ...syslog
+Host ....ApplSysLog
+Index ....application_log
+
+Submit [shows file has been uploaded successfully]
+
+------------
+Search Data
+Start searching
+
+q1: default query >>> source="syslog" host="ApplSysLog" index="application_log" sourcetype="syslog"
+
+q2: from under interesting fields > xx more fields > select 'map' > 'events with this field'
+    from under selected fields select 'map' > 'events with this field' 
+    
+     Now SPL shows >>> source="syslog" host="ApplSysLog" index="application_log" sourcetype="syslog" map="*"
+
+q3: >>> host="ApplSysLog" index="application_log" sourcetype="syslog" [select All time]
+    Under 'Event' highlight 'shutdown' by placing your cursor and then 'add to search' and see if query is updated..
+
+    Now SPL shows >>> host="ApplSysLog" index="application_log" sourcetype="syslog" shutdown
+
+q4: Close search 
+    > from search history select 'source="syslog" host="ApplSysLog" index="application_log" sourcetype="syslog"' 
+    > and add to search
+    > source="syslog" host="ApplSysLog" index="application_log" sourcetype="syslog" | table _time "org.apache.hadoop.hdfs.server.blockmanagement.BlockManager"
+
+============
+Delete Data
+
+Removing data from Splunk is possible by using the delete command. 
+We first create the search condition to fetch the events we want to mark for delete. 
+Once the search condition is acceptable, we add the delete clause at the end of the command to remove those events
+from Splunk. After deletion, not even a user with admin privilege is able to view this data in Splunk.
+
+Removal of data is irreversible. If you still want the removed data back into Splunk then you 
+should have the original source data copy with you which can be used to re-index the data in Splunk. 
+It will be a process similar to creating a new index.
+
+Assigning Delete Privilege
+Any user including admin user does not have access to delete the data by default. 
+By default, only the "can_delete" role has the ability to delete events. 
+So, we create a new user, assign this role and then login with the credentials of this 
+new user to perform the delete operation.
+
+New user created : settings > users > new user 
+                   name:todeluser
+                   can_delete 
+
+Then login as new user.
+for example from our past queries :
+
+in search bar > source="syslog" host="ApplSysLog" index="application_log" sourcetype="syslog" | delete
+              > index=* host=HP_Appl_Log | delete
+
+Login back as admin and check if data exists
+
+======================
+
+
+
+
+
+
+
+
