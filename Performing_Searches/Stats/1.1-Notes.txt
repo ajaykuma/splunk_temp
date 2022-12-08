@@ -94,6 +94,12 @@ index=bankdata | table age,marital,job,balance,y
 | streamstats avg(balance) as avg_bal by job 
 | eventstats last(avg_bal) as lavg_bal by job
 
+
+--if streaming data & timeseries
+index=bankdata | table _time,age,marital,job,balance,y | sort _time
+| streamstats reset_on_change=true time_window=2m count as latestcount by y 
+| table _time,age,marital,job,balance,y,latestcount
+
 =============
 Using tstats
 It performs statistical queries on indexed fields in tsidx files . The indexed fields can be from normal index data, tscollect data 
