@@ -1,0 +1,260 @@
+stats: A type fo search command that orders the results into a data table
+Transforming commands: Transform the specified cell values for each event into numerical values that SE can use
+for statistical purposes.
+Other transforming commands are: chart,timechart, stats, top, rare, contigency, highlight.
+
+--Build index salesJan from salesjan2009.csv file
+-----------
+Using stats: (Transforming command:stats/eventstats/streamstats)
+
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | stats count by Country
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | stats count by Country,City
+
+--eventstats and streamstats are streaming commands
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | stats count by Country
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | stats count by Country,City
+
+--adds stats as events come in
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | streamstats by Country
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | streamstats count by Country
+
+--without by clause
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | streamstats count
+
+--avg changes as data comes in
+index=salesJan| table Country,City,Price | where Country IN ("Canada","Italy") | streamstats avg(Price) by Country
+
+--count per element
+index=salesJan| table Country,City,Product | stats count, count(Country), count(City), count(Product)
+index=salesJan| table Country,City,Product | stats count(Product) by Country
+--to get total count we can use addcoltotals
+index=salesJan| table Country,City,Product | stats count(Product) by Country | addcoltotals
+
+index=salesJan| table Country,City,Product | stats count(Product) by Country | rename count(Product) as Product_Count
+index=salesJan| table Country,City,Product | stats count(Product) as Product_Count by Country | sort Product_Count desc
+index=salesJan| table Country,City,Product | stats count(Product) by Country | rename count(Product) as Product_Count | sort Product_Count desc
+
+--if using by clause, one row is returned for each distinct value specified in 'by clause'
+--using avg()
+index=salesJan | stats avg(Price) by Country
+index=salesJan | stats count(City) by Country
+index=salesJan | stats avg(Price) by Country,City
+
+
+--Build index bankdata using Bank_full.csv
+index="bankdata" | stats avg(balance) by age
+index="bankdata" | stats avg(balance) by age,marital
+index="bankdata" | stats avg(balance) by education,age,marital,job
+
+--using eventstats
+index="bankdata" | stats count by age,balance | eventstats avg(balance) by age
+--using streamstats
+index="bankdata" | stats count by age,balance | streamstats avg(balance) by age
+
+--looking at distinct count
+index="bankdata" | stats distinct_count(age), dc(marital), dc(job)
+
+--other functions
+index="bankdata" | stats max(age) as max_age,min(age) as min_age by marital,job
+index="bankdata" | stats max(age) as max_age,min(age) as min_age, avg(balance) by marital,job
+index="bankdata" | stats max(age) as max_age,min(age) as min_age, avg(balance),count(y) by marital,job
+index="bankdata" | stats min(age) as min_age by job,marital 
+index="bankdata" | stats min(age) as min_age by job,marital | sort - marital
+index="bankdata" | stats avg(balance) as avg_bal by age 
+index="bankdata" | stats sum(balance),avg(balance),min(balance),max(balance),count by marital,job 
+index="bankdata" | stats min(balance),max(balance),range(balance) by age
+index="bankdata" | stats min(balance),max(balance),range(balance) by age | where age > 50 
+index="bankdata" | stats min(balance),max(balance),range(balance) by age | where age > 50 and age < 55
+index="bankdata" | stats median(age),mode(age),range(age) by job
+index="bankdata" | stats dc(job) as job_types values(job) as job_categories
+index="bankdata" | stats dc(job) as job_types values(job) as job_categories dc(marital) values(marital) dc(y) as subscription_intrst values(y) 
+
+--using percentiles
+These functions return the nth percentile of the values in a numeric field. You can think of this as an estimate of where the top N% starts.
+ For example, a 95th percentile says that 95% of the values in the field are below the estimate and 5% of the values in the field are above 
+the estimate.
+
+The perc function returns a single number that represents the lower end of the approximate values for the percentile requested.
+index="bankdata" | stats perc1(balance)
+index="bankdata" | stats perc99(balance)
+index="bankdata" | stats perc50(balance) perc95(balance)
+
+--if more than 1000 values
+the upperperc function gives the approximate upper bound for the percentile requested.
+index="bankdata" | stats upperperc50(balance)
+
+--we can also use exactperc() which is very resource intensive
+
+--generates the estimated distinct count of the balance field
+index="bankdata" | stats estdc(balance) by age
+index="bankdata" | stats estdc(y) as y by age 
+
+--using multiple stats options
+index=bankdata | table age,marital,job,balance,y 
+| streamstats avg(balance) as avg_bal by job 
+| eventstats last(avg_bal) as lavg_bal by job
+
+=============
+Using tstats
+It performs statistical queries on indexed fields in tsidx files . The indexed fields can be from normal index data, tscollect data 
+or accelerated data models.
+
+tsidx files: A time-series index file/also called as index file.
+A tsidx file associates each unique keyword in your data with location references to events which are stored in a companion raw data file.
+Together the raw data file and its related tsidx files make up the contents of an index bucket.
+
+$SPLUNK_HOME/var/lib/splunk/defaultdb/db--to see the .tsidx file
+
+--use walkex to look into contents of a tsidx file
+>walkex "path of tsidx/*.tsidx file" "*"
+
+
+Splunk enterprise creates a separate set of tsidx files for data model acceleration.
+In this case, it uses the tsidx files as summaries of the data returned by the data model.
+
+Data that can be queries using tstats:
+Normal index data
+Data manually collected with the tscollect command
+An accelerated data model
+
+Syntax:
+| tstats
+[prestats=<bool>]
+[local=<bool>]
+[append=<bool>]
+[summariesonly=<bool>]
+[include_reduced_buckets=<bool>]
+[allow_old_summaries=<bool>]
+[chunk_size=<unsigned int>]
+[fillnull_value=<string>]
+<stats-func>...
+[ FROM datamodel=<data_model_name>.<root_dataset_name> [where nodename = <root_dataset_name>.<...>.<target_dataset_name>]]
+[ WHERE <search-query> | <field> IN (<value-list>)]
+[ BY (<field-list> | (PREFIX(<field>))) [span=<timespan>]]
+
+Advantages:
+It is faster than stats ,since tstats only looks at the indexed metadata (i.e. the .tsidx files in the buckets on the indexers)
+whereas stats is working off the data (raw events) before the command
+
+Disadvantages:
+Since tstats can only look at the indexed metadata it can only search fields that are in the metadata.
+By default, this only includes index-time fields such as sourcetype, host, source, _time etc.
+Uses more disk space.
+
+Tstats is really good at aggregating values and reducing rows 
+
+--working on default index
+> |tstats count
+
+> index=_internal | stats count by source
+
+> |tstats count where index=_internal where sourcetype in (splunkd)
+> |tstats count where index=_internal where sourcetype in (splunkd) by sourcetype
+> |tstats count where index=_internal where sourcetype in (splunkd) by _time span=2d
+
+--if field is not part of index, it wont show any result for tstats
+>|tstats count where index=_internal by group
+>index=_internal | stats count by group
+
+=============
+--Looking into datamodel to use with stats command in its FROM CLAUSE
+--tstats access .tsidx file only when a data model is accelerated
+
+--settings > Data Models > shows default data models
+Internal audit logs & Internal server logs
+--click and look into server logs
+
+>| tstats count from datamodel=internal_server
+(shows a count but data model isnt accelerated and thus this is same as running a normal search)
+>| datamodel internal_server search
+
+Now, if data model is accelerated, then .tsidx file would be created
+--without acceleration
+>|tstats summariesonly=true count from datamodel=internal_server
+(no result)
+--with acceleration (enable acceleration & summary range: 7 days)
+(with acceleration we benefit on performance i.e cpu usage and have trade off of more disc usage)
+(check result)
+
+=============
+--prestats:
+if prestats=true: splunk generates data/output which can be consumed by statistical functions
+--append:
+
+Look into data model and look into REST API calls > Job EndPoint > 'uri_path=/services/search/job'
+If we need to create a report on total number of Rest API calls 
+
+--accessing node of a datamodel (for last 7 days)
+>|tstats count from datamodel=internal_server where nodename=server.splunkdaccess
+
+>|tstats prestats=true count from datamodel=internal_server where nodename=server.splunkdaccess
+| eval count_for="total"
+|tstats prestats=true append=true count from datamodel=internal_server where nodename=server.splunkdaccess.job_endpoint
+|eval count_for=case(isnotnull(count_for), count_for, true(), "searchapi")
+| chart count by count_for
+
+Note**prestats is a report generating command ie first command in search stream so prestats becomes an
+event generating function.
+1st tstats-gets overall count
+2nd tstats-gets count at job level
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

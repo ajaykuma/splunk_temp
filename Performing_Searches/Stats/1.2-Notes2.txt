@@ -1,0 +1,26 @@
+Data Model acceleration:
+--------------
+Data model acceleration is a tool that you can use to speed up data models that represent extremely large datasets. 
+After acceleration, pivots based on accelerated data model datasets complete quicker than they did before, 
+as do reports and dashboard panels that are based on those pivots.
+
+Data model acceleration does this with the help of the High Performance Analytics Store functionality, 
+which builds data summaries behind the scenes in a manner similar to that of report acceleration. 
+Like report acceleration summaries, data model acceleration summaries are easy to enable and disable, 
+and are stored on your indexers parallel to the index buckets that contain the events that are being summarized.
+
+This is how data model acceleration differs from report acceleration and summary indexing:
+
+Report acceleration and summary indexing speed up individual searches, on a report by report basis. 
+	They do this by building collections of precomputed search result aggregates.
+Data model acceleration speeds up reporting for the entire set of fields that you define in a data model 
+	and which you and your Pivot users want to report on. In effect it accelerates the dataset represented by 
+	that collection of fields rather than a particular search against that dataset.
+
+High performance analytics store:
+Data model acceleration summaries are composed of multiple time-series index files, which have the .tsidx file extension. 
+Each .tsidx file contains records of the indexed field::value combos in the selected dataset and all of the index locations 
+of those field::value combos. It's these .tsidx files that make up the high-performance analytics store. Collectively, 
+the .tsidx files are optimized to accelerate a range of analytical searches involving the set of fields defined in the accelerated data model.
+
+
