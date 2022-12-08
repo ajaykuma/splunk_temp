@@ -100,6 +100,11 @@ index=bankdata | table _time,age,marital,job,balance,y | sort _time
 | streamstats reset_on_change=true time_window=2m count as latestcount by y 
 | table _time,age,marital,job,balance,y,latestcount
 
+--create index marketarrivals using file marketarrivals.csv
+index="marketarrivals" | table city,year,month,quantity | sort year,month asc | streamstats sum(quantity) by year
+index="marketarrivals" | table city,year,month,quantity,priceMin | sort year,month asc | streamstats min(priceMin) by year
+
+
 =============
 Using tstats
 It performs statistical queries on indexed fields in tsidx files . The indexed fields can be from normal index data, tscollect data 
